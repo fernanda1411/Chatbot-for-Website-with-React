@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from "axios/index";
+import { withRouter } from 'react-router-dom';
 
 import Cookies from 'universal-cookie';
 import { v4 as uuid } from 'uuid';
@@ -20,7 +21,9 @@ class Chatbot extends Component {
         this._handleInputKeyPress = this._handleInputKeyPress.bind(this);
         this._handleQuickReplyPayload = this._handleQuickReplyPayload.bind(this);
         this.state = {
-            messages: []
+            messages: [],
+            showBot: true,
+            shopWelcomeSent: false
         };
         if (cookies.get('userID') === undefined) {
             cookies.set('userID', uuid(), { path: '/' });
@@ -65,6 +68,18 @@ class Chatbot extends Component {
 
     componentDidMount() {
         this.df_event_query('Welcome');
+
+        if (window.location.pathname === '/shop' && !this.state.shopWelcomeSent) {
+            this.df_event_query('WELCOME_SHOP');
+            this.setState({ shopWelcomeSent: true, showBot: true });
+        }
+
+        this.props.history.listen(() => {
+            if (this.props.history.location.pathname === '/shop' && !this.state.shopWelcomeSent) {
+                this.df_event_query('WELCOME_SHOP');
+                this.setState({ shopWelcomeSent: true, showBot: true });
+            }
+        });
     }
 
     componentDidUpdate() {
@@ -84,6 +99,7 @@ class Chatbot extends Component {
                 break;
             case 'training_masterclass':
                 this.df_event_query('MASTERCLASS');
+                break;
             default:
                 this.df_text_query(text);
                 break;
@@ -192,4 +208,4 @@ class Chatbot extends Component {
     }
 }
 
-export default Chatbot;
+export default withRouter(Chatbot);
